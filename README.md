@@ -15,7 +15,7 @@ path                  | description
 `calib`               | To be populated with master calibs. Currently empty.
 `templates`           | To be populated with calibrated images intended to be used as templates. Currently empty.
 `data`                | Butler repo into which raw data can be ingested.  This should be copied to an appropriate location before ingestion.  Note that the `_mapper` file will require updating for other instruments.
-`ref_cats`            | To be populated with relevant reference catalogs. Currently empty.
+`ref_cats`            | To be populated with tarball(s) of HTM shards from relevant reference catalogs. Currently contains a small (useless) example tarball.
 `dataIds.list`        | List of dataIds in this repo. For use in running Tasks. Currently set to run all Ids.
 
 
