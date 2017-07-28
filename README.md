@@ -1,9 +1,9 @@
-`verify_ap_dataset_template`
+`ap_verify_dataset_template`
 ============================
 
-Template repo for developing datasets for use with verify_ap.
+Template repo for developing datasets for use with ap_verify.
 
-This repo is designed to be used as a template for developing new data sets for integration into `verify_ap`.
+This repo is designed to be used as a template for developing new data sets for integration into `ap_verify`.
 
 It is currently set up for using `obs_test`.
 
