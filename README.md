@@ -11,11 +11,11 @@ Relevant Files and Directories
 -----
 path                  | description
 :---------------------|:-----------------------------
-`raw`                 | To be populated with photometrically and astrometrically calibrated data. Currently contains a single small fits file (taken from `obs_test`) to test `git-lfs` functionality.
+`raw`                 | To be populated with raw data. Currently contains a single small fits file (taken from `obs_test`) to test `git-lfs` functionality.
 `calib`               | To be populated with master calibs. Currently empty.
 `templates`           | To be populated with calibrated images intended to be used as templates. Currently empty.
-`data`                | Butler repo into which raw data can be ingested.  This should be copied to an appropriate location before ingestion.  Note that the `_mapper` file will require updating for other instruments.
-`ref_cats`            | To be populated with tarball(s) of HTM shards from relevant reference catalogs. Currently contains a small (useless) example tarball.
+`repo`                | Butler repo into which raw data can be ingested.  This should be copied to an appropriate location before ingestion.  Note that the `_mapper` file will require updating for other instruments.
+`refcats`             | To be populated with tarball(s) of HTM shards from relevant reference catalogs. Currently contains a small (useless) example tarball.
 `dataIds.list`        | List of dataIds in this repo. For use in running Tasks. Currently set to run all Ids.
 
 
