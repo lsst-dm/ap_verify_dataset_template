@@ -7,18 +7,18 @@ ap_verify_dataset_template
 The ``ap_verify_dataset_template`` package is used to create :ref:`datasets<ap-verify-datasets>` for `lsst.ap.verify`.
 It is not itself a valid dataset.
 
-Project info
-============
+.. _ap_verify_dataset_template-using:
 
-Repository
-   https://github.com/lsst-dm/ap_verify_dataset_template
+Using ap_verify_dataset_template
+================================
 
-.. Datasets do not have their own (or a collective) Jira components; by convention we include them in ap_verify
+This package provides an example for how a dataset package can be put together.
+It is not guaranteed to be ingestible using ``ap_verify``, nor are the individual files guaranteed to be usable with each other.
+The package provides some instructions on how to create a new dataset; more information can be found in :ref:`ap-verify-datasets-creation`.
 
-Jira component
-   `ap_verify <https://jira.lsstcorp.org/issues/?jql=project %3D DM %20AND%20 component %3D ap_verify %20AND%20 text ~ "dataset template">`_
+.. _ap_verify_dataset_template-contents:
 
-Dataset Contents
+Dataset contents
 ================
 
 This package provides a number of demonstration files copied from `obs_test <https://github.com/lsst/obs_test/>`_.
@@ -28,9 +28,15 @@ This package contains only raw files, with no calibration information or differe
 It contains a small Gaia DR1 reference catalog for illustrating the catalog format.
 The catalog is not guaranteed to overlap with the footprint of the raw data.
 
-Intended Use
+.. _ap_verify_dataset_template-contributing:
+
+Contributing
 ============
 
-This package provides an example for how a dataset package can be put together.
-It is not guaranteed to be ingestible using ``ap_verify``, nor are the individual files guaranteed to be usable with each other.
-The package provides some instructions on how to create a new dataset; more information can be found in :ref:`ap-verify-datasets-creation`.
+``ap_verify_dataset_template`` is developed at https://github.com/lsst-dm/ap_verify_dataset_template.
+You can find Jira issues for this module under the `ap_verify <https://jira.lsstcorp.org/issues/?jql=project%20%3D%20DM%20AND%20component%20%3D%20ap_verify%20AND%20text~"dataset template">`_ component.
+
+.. If there are topics related to developing this module (rather than using it), link to this from a toctree placed here.
+
+.. .. toctree::
+..    :maxdepth: 1
