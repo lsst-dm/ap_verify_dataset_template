@@ -4,7 +4,7 @@
 ap_verify_dataset_template
 ##########################
 
-The ``ap_verify_dataset_template`` package is used to create :doc:`datasets</modules/lsst.ap.verify/datasets>` for `lsst.ap.verify`.
+The ``ap_verify_dataset_template`` package is used to create :doc:`datasets</modules/lsst.ap.verify/datasets>` for :doc:`/modules/lsst.ap.verify/index`.
 It is not itself a valid dataset.
 
 .. _ap_verify_dataset_template-using:
