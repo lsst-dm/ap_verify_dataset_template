@@ -31,15 +31,13 @@ Our [Developer Guide](http://developer.lsst.io/en/latest/tools/git_lfs.html) exp
 Usage
 -----
 
-<!-- TODO: replace with just links to Sphinx labels `ap-verify-datasets-install` and `ap-verify-running` once those docs are published -->
+Datasets are designed to be run using [`ap_verify`](https://pipelines.lsst.io/modules/lsst.ap.verify/), which is distributed as part of the `lsst_distrib` package of the [LSST Science Pipelines](https://pipelines.lsst.io/).
 
-Datasets must be cloned (with Git LFS) and set up with [EUPS](https://developer.lsst.io/stack/eups-tutorial.html) before they can be processed with `ap_verify`.
-Then, run `ap_verify` to ingest and process the dataset through the AP pipeline:
+This dataset is not included in `lsst_distrib` and is not available through `newinstall.sh`.
+However, it can be installed explicitly with the [LSST Software Build Tool](https://developer.lsst.io/stack/lsstsw.html) or by cloning directly:
 
-    ap_verify.py --dataset <DATASET> --id "<DATA ID FOR SINGLE IMAGE>" --output /my_output_dir/ --silent
+    git clone https://github.com/lsst/<dataset>/
+    setup -r <dataset>
 
-or, instead, run `ingest_dataset` to create standard Butler repositories for other purposes:
+See the Science Pipelines documentation for more detailed instructions on [installing datasets](https://pipelines.lsst.io/modules/lsst.ap.verify/datasets-install.html) and [running `ap_verify`](https://pipelines.lsst.io/modules/lsst.ap.verify/running.html).
 
-    ingest_dataset.py --dataset <DATASET> --output /my_output_dir/
-
-See the [`ap_verify`](https://github.com/lsst-dm/ap_verify/) documentation for more details.
