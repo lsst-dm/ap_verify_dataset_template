@@ -17,7 +17,7 @@ path                  | description
 `config`              | To be populated with dataset-specific configs. Currently contains an example file corresponding to the contents of `raw` and `refcats`.
 `templates`           | To be populated with `TemplateCoadd` images produced by a compatible version of the LSST pipelines. Must be organized as a filesystem-based Butler repo. Currently empty.
 `repo`                | A template for a Gen 2 Butler raw data repository. This directory must never be written to; instead, it should be copied to a separate location, and data ingested into the copy (this is handled automatically by `ap_verify`, see below). Note that the `_mapper` file will require updating for other instruments.
-`preloaded`           | To be populated with a Gen 3 Butler repository (see below). This repository must never be written to; instead, it should be copied to a separate location (this is handled automatically by `ap_verify`, see below). Currently empty.
+`preloaded`           | To be populated with a Gen 3 Butler repository (see below). This repository must never be written to; instead, it should be copied to a separate location (this is handled automatically by `ap_verify`, see below). Currently empty, but can be populated from the other directories using `scripts/add_gen3_repo.py`.
 `refcats`             | To be populated with tarball(s) of HTM shards from relevant reference catalogs. Currently contains a small (useless) example tarball.
 `dataIds.list`        | List of dataIds in this repo. For use in running Tasks. Currently set to run all Ids.
 
