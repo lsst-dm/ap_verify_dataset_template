@@ -139,6 +139,7 @@ def _get_instrument_class(instrument):
     classes = {
         "decam": "lsst.obs.decam.DarkEnergyCamera",
         "hsc": "lsst.obs.subaru.HyperSuprimeCam",
+        "imsim": "lsst.obs.lsst.LsstImSim",
     }
 
     try:
