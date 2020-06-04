@@ -13,7 +13,7 @@ import tempfile
 
 import lsst.log
 import lsst.daf.butler as daf_butler
-from lsst.obs.base.script import convertGen2RepoToGen3
+import lsst.obs.base.script.convert
 import lsst.ap.verify as ap_verify
 
 
@@ -96,14 +96,14 @@ def _migrate_gen2_to_gen3(dataset, gen2_repo, gen2_calib_repo, gen3_repo, mode, 
     instrument = _get_instrument_class(dataset.camera)
     config = os.path.join(dataset.configLocation, config_file)
 
-    # Call convertGepoToGen3 instead of calling ConvertRepoTask directly, to
-    # avoid manually having to do a lot of setup that may change in the future
+    # Call the script instead of calling ConvertRepoTask directly, to
+    # avoid manually having to do a lot of setup that may change in the future.
     # calib/<instrument>, refcats, and skymaps collections created by default
-    convertGen2RepoToGen3.convert(gen2_repo, gen3_repo, instrument,
-                                  # skymap detected automatically; do nothing
-                                  calibs=gen2_calib_repo,
-                                  config=config,
-                                  transferMode=mode)
+    lsst.obs.base.script.convert(gen3_repo, gen2_repo, instrument,
+                                 skymap_name=None, skymap_config=None, reruns=None,
+                                 calibs=gen2_calib_repo,
+                                 config_file=config,
+                                 transfer=mode)
 
 
 def _export_for_copy(dataset, repo):
