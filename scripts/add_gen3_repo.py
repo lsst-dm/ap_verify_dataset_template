@@ -98,7 +98,7 @@ def _migrate_gen2_to_gen3(dataset, gen2_repo, gen2_calib_repo, gen3_repo, mode, 
 
     # Call the script instead of calling ConvertRepoTask directly, to
     # avoid manually having to do a lot of setup that may change in the future.
-    # calib/<instrument>, refcats, and skymaps collections created by default
+    # <instrument>/calib, refcats, and skymaps collections created by default
     lsst.obs.base.script.convert(gen3_repo, gen2_repo, instrument,
                                  skymap_name=None, skymap_config=None, reruns=None,
                                  calibs=gen2_calib_repo,
