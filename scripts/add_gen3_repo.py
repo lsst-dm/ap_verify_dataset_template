@@ -58,7 +58,7 @@ def main():
 
     log.info("Converting calibs...")
     with tempfile.TemporaryDirectory() as tmp:
-        workspace = ap_verify.workspace.Workspace(tmp)
+        workspace = ap_verify.workspace.WorkspaceGen2(tmp)
         ap_verify.ingestion.ingestDataset(dataset, workspace)
 
         gen2_repo = workspace.dataRepo
