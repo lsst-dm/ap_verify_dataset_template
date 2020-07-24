@@ -117,7 +117,14 @@ def _export_for_copy(dataset, repo):
     """
     butler = daf_butler.Butler(repo)
     with butler.export(directory=dataset.configLocation, format="yaml") as contents:
-        contents.saveDatasets(butler.registry.queryDatasets(datasetType=..., collections=..., expand=True))
+        # Need all detectors, even those without data, for visit definition
+        contents.saveDataIds(butler.registry.queryDimensions({"detector"}))
+        # RepoExport has no safeguards against redundant data
+        extraDimensions = set(butler.registry.dimensions.elements).difference(
+            {"detector", "instrument", "htm7", "abstract_filter"}
+        )
+        contents.saveDatasets(butler.registry.queryDatasets(datasetType=..., collections=..., expand=True),
+                              elements=extraDimensions)
 
 
 if __name__ == "__main__":
