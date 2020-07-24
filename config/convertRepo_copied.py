@@ -1,7 +1,7 @@
 
 # Config overrides for convert_gen2_repo_to_gen3.py
 
-config.datasetIncludePatterns = ["ref_cat", "defects", "crosstalk"]
+config.datasetIncludePatterns = ["ref_cat"]
 
 config.refCats = ['gaia']
 for refcat in config.refCats:
