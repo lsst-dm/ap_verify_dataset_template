@@ -93,13 +93,12 @@ def _migrate_gen2_to_gen3(dataset, gen2_repo, gen2_calib_repo, gen3_repo, mode, 
        The config file (in the dataset config directory) with a configuration
        for `~lsst.obs.base.gen2to3.ConvertRepoTask`
     """
-    instrument = _get_instrument_class(dataset.camera)
     config = os.path.join(dataset.configLocation, config_file)
 
     # Call the script instead of calling ConvertRepoTask directly, to
     # avoid manually having to do a lot of setup that may change in the future.
     # <instrument>/calib, refcats, and skymaps collections created by default
-    lsst.obs.base.script.convert(gen3_repo, gen2_repo, instrument,
+    lsst.obs.base.script.convert(repo=gen3_repo, gen2root=gen2_repo,
                                  skymap_name=None, skymap_config=None, reruns=None,
                                  calibs=gen2_calib_repo,
                                  config_file=config,
@@ -118,35 +117,14 @@ def _export_for_copy(dataset, repo):
     """
     butler = daf_butler.Butler(repo)
     with butler.export(directory=dataset.configLocation, format="yaml") as contents:
-        contents.saveDatasets(butler.registry.queryDatasets(datasetType=..., collections=..., expand=True))
-
-
-def _get_instrument_class(instrument):
-    """Convert a Gen 2 instrument name to a Gen 3 instrument class.
-
-    Parameters
-    ----------
-    instrument : `str`
-        A name in the format returned by
-        `lsst.obs.base.CameraMapper.getCameraName`.
-
-    Returns
-    -------
-    instrumentClass : `str`
-        The fully-qualified `~lsst.obs.base.Instrument` class for the
-        corresponding instrument.
-    """
-    classes = {
-        "decam": "lsst.obs.decam.DarkEnergyCamera",
-        "hsc": "lsst.obs.subaru.HyperSuprimeCam",
-        "imsim": "lsst.obs.lsst.LsstImSim",
-    }
-
-    try:
-        return classes[instrument]
-    except KeyError:
-        raise ValueError(f"Unsupported instrument {instrument}; consider adding it to the "
-                         "dataset template's add_gen3_repo.py script.")
+        # Need all detectors, even those without data, for visit definition
+        contents.saveDataIds(butler.registry.queryDimensions({"detector"}))
+        # RepoExport has no safeguards against redundant data
+        extraDimensions = set(butler.registry.dimensions.elements).difference(
+            {"detector", "instrument", "htm7", "abstract_filter"}
+        )
+        contents.saveDatasets(butler.registry.queryDatasets(datasetType=..., collections=..., expand=True),
+                              elements=extraDimensions)
 
 
 if __name__ == "__main__":
