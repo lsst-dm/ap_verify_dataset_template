@@ -120,6 +120,12 @@ def _export_for_copy(dataset, repo):
         # Need all detectors, even those without data, for visit definition
         contents.saveDataIds(butler.registry.queryDataIds({"detector"}).expanded())
         contents.saveDatasets(butler.registry.queryDatasets(datasetType=..., collections=...))
+        # Explicitly save the calibration collection.
+        # Do _not_ include the RUN collections here because that will export
+        # an empty raws collection, which ap_verify assumes does not exist
+        # before ingest.
+        for collection in butler.registry.queryCollections(..., collectionTypes={daf_butler.CollectionType.CALIBRATION}):
+            contents.saveCollection(collection)
 
 
 if __name__ == "__main__":
