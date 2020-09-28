@@ -124,7 +124,8 @@ def _export_for_copy(dataset, repo):
         # Do _not_ include the RUN collections here because that will export
         # an empty raws collection, which ap_verify assumes does not exist
         # before ingest.
-        for collection in butler.registry.queryCollections(..., collectionTypes={daf_butler.CollectionType.CALIBRATION}):
+        for collection in butler.registry.queryCollections(
+                ..., collectionTypes={daf_butler.CollectionType.CALIBRATION}):
             contents.saveCollection(collection)
 
 
