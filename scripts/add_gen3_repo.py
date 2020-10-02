@@ -119,12 +119,14 @@ def _export_for_copy(dataset, repo):
     with butler.export(directory=dataset.configLocation, format="yaml") as contents:
         # Need all detectors, even those without data, for visit definition
         contents.saveDataIds(butler.registry.queryDataIds({"detector"}).expanded())
-        # RepoExport has no safeguards against redundant data
-        extraDimensions = set(butler.registry.dimensions.elements).difference(
-            {"detector", "instrument", "htm7", "abstract_filter"}
-        )
-        contents.saveDatasets(butler.registry.queryDatasets(datasetType=..., collections=...),
-                              elements=extraDimensions)
+        contents.saveDatasets(butler.registry.queryDatasets(datasetType=..., collections=...))
+        # Explicitly save the calibration collection.
+        # Do _not_ include the RUN collections here because that will export
+        # an empty raws collection, which ap_verify assumes does not exist
+        # before ingest.
+        for collection in butler.registry.queryCollections(
+                ..., collectionTypes={daf_butler.CollectionType.CALIBRATION}):
+            contents.saveCollection(collection)
 
 
 if __name__ == "__main__":
