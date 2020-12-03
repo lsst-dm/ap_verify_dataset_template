@@ -9,4 +9,3 @@ for refcat in config.refCats:
 
 # Already stored in convertRepo_calibs.py
 config.doRegisterInstrument = False
-config.doWriteCuratedCalibrations = False
