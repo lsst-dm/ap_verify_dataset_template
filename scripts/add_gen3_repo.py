@@ -12,8 +12,9 @@ import shutil
 import tempfile
 
 import lsst.log
+import lsst.daf.persistence as daf_persistence
 import lsst.daf.butler as daf_butler
-import lsst.obs.base.script.convert
+from lsst.obs.base.gen2to3 import CalibRepo, ConvertRepoTask
 import lsst.ap.verify as ap_verify
 
 
@@ -93,16 +94,35 @@ def _migrate_gen2_to_gen3(dataset, gen2_repo, gen2_calib_repo, gen3_repo, mode, 
        The config file (in the dataset config directory) with a configuration
        for `~lsst.obs.base.gen2to3.ConvertRepoTask`
     """
-    config = os.path.join(dataset.configLocation, config_file)
+    datasetConfig = os.path.join(dataset.configLocation, config_file)
 
-    # Call the script instead of calling ConvertRepoTask directly, to
-    # avoid manually having to do a lot of setup that may change in the future.
-    # <instrument>/calib, refcats, and skymaps collections created by default
-    lsst.obs.base.script.convert(repo=gen3_repo, gen2root=gen2_repo,
-                                 skymap_name=None, skymap_config=None, reruns=None,
-                                 calibs=gen2_calib_repo,
-                                 config_file=config,
-                                 transfer=mode)
+    # Copied from obs_base:python/lsst/obs/base/script/convert.py
+    # Keep it in sync!
+    try:
+        butlerConfig = lsst.daf.butler.Butler.makeRepo(gen3_repo)
+    except FileExistsError:
+        # Use the existing butler configuration
+        butlerConfig = gen3_repo
+    butler3 = lsst.daf.butler.Butler(butlerConfig)
+
+    # Derive the gen3 instrument from the gen2_repo
+    instrument = daf_persistence.Butler.getMapperClass(gen2_repo).getGen3Instrument()()
+
+    convertRepoConfig = ConvertRepoTask.ConfigClass()
+    instrument.applyConfigOverrides(ConvertRepoTask._DefaultName, convertRepoConfig)
+    convertRepoConfig.raws.transfer = mode
+    convertRepoConfig.load(datasetConfig)
+
+    rerunsArg = []
+
+    # create a new butler instance for running the convert repo task
+    butler3 = lsst.daf.butler.Butler(butlerConfig, run=instrument.makeDefaultRawIngestRunName())
+    convertRepoTask = ConvertRepoTask(config=convertRepoConfig, butler3=butler3, instrument=instrument)
+    convertRepoTask.run(
+        root=gen2_repo,
+        reruns=rerunsArg,
+        calibs=None if gen2_calib_repo is None else [CalibRepo(path=gen2_calib_repo)],
+    )
 
 
 def _export_for_copy(dataset, repo):
