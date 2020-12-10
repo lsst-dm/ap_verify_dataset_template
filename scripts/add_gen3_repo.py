@@ -12,8 +12,9 @@ import shutil
 import tempfile
 
 import lsst.log
+import lsst.daf.persistence as daf_persistence
 import lsst.daf.butler as daf_butler
-import lsst.obs.base.script.convert
+from lsst.obs.base.gen2to3 import CalibRepo, ConvertRepoTask
 import lsst.ap.verify as ap_verify
 
 
@@ -54,6 +55,7 @@ def main():
     log.info("Converting templates...")
     gen2_templates = dataset.templateLocation
     _migrate_gen2_to_gen3(dataset, gen2_templates, None, gen3_repo, mode,
+                          curated=False,
                           config_file="convertRepo_templates.py")
 
     log.info("Converting calibs...")
@@ -65,16 +67,18 @@ def main():
         gen2_calibs = workspace.calibRepo
         # Files stored in the Gen 2 part of the dataset, can be safely linked
         _migrate_gen2_to_gen3(dataset, gen2_repo, gen2_calibs, gen3_repo, mode,
+                              curated=False,
                               config_file="convertRepo_calibs.py")
         # Our refcats and defects are temporary files, and must not be linked
         _migrate_gen2_to_gen3(dataset, gen2_repo, gen2_calibs, gen3_repo, mode="copy",
+                              curated=False,
                               config_file="convertRepo_copied.py")
 
     log.info("Exporting Gen 3 registry to configure new repos...")
     _export_for_copy(dataset, gen3_repo)
 
 
-def _migrate_gen2_to_gen3(dataset, gen2_repo, gen2_calib_repo, gen3_repo, mode, config_file):
+def _migrate_gen2_to_gen3(dataset, gen2_repo, gen2_calib_repo, gen3_repo, mode, curated, config_file):
     """Convert a Gen 2 repository into a Gen 3 repository.
 
     Parameters
@@ -89,20 +93,43 @@ def _migrate_gen2_to_gen3(dataset, gen2_repo, gen2_calib_repo, gen3_repo, mode, 
     mode : {'relsymlink', 'copy'}
        Whether the Gen 3 repo should contain symbolic links to the Gen 2
        datasets, or an independent copy.
+    curated : `bool`
+       If true, curated calibrations will be written to ``gen3_repo``. If
+       ``gen2_calib_repo`` is `None`, this flag is ignored and curated
+       calibrations are always written.
     config_file : `str`
        The config file (in the dataset config directory) with a configuration
        for `~lsst.obs.base.gen2to3.ConvertRepoTask`
     """
-    config = os.path.join(dataset.configLocation, config_file)
+    datasetConfig = os.path.join(dataset.configLocation, config_file)
 
-    # Call the script instead of calling ConvertRepoTask directly, to
-    # avoid manually having to do a lot of setup that may change in the future.
-    # <instrument>/calib, refcats, and skymaps collections created by default
-    lsst.obs.base.script.convert(repo=gen3_repo, gen2root=gen2_repo,
-                                 skymap_name=None, skymap_config=None, reruns=None,
-                                 calibs=gen2_calib_repo,
-                                 config_file=config,
-                                 transfer=mode)
+    # Copied from obs_base:python/lsst/obs/base/script/convert.py
+    # Keep it in sync!
+    try:
+        butlerConfig = lsst.daf.butler.Butler.makeRepo(gen3_repo)
+    except FileExistsError:
+        # Use the existing butler configuration
+        butlerConfig = gen3_repo
+    butler3 = lsst.daf.butler.Butler(butlerConfig)
+
+    # Derive the gen3 instrument from the gen2_repo
+    instrument = daf_persistence.Butler.getMapperClass(gen2_repo).getGen3Instrument()()
+
+    convertRepoConfig = ConvertRepoTask.ConfigClass()
+    instrument.applyConfigOverrides(ConvertRepoTask._DefaultName, convertRepoConfig)
+    convertRepoConfig.raws.transfer = mode
+    convertRepoConfig.load(datasetConfig)
+
+    rerunsArg = []
+
+    # create a new butler instance for running the convert repo task
+    butler3 = lsst.daf.butler.Butler(butlerConfig, run=instrument.makeDefaultRawIngestRunName())
+    convertRepoTask = ConvertRepoTask(config=convertRepoConfig, butler3=butler3, instrument=instrument)
+    convertRepoTask.run(
+        root=gen2_repo,
+        reruns=rerunsArg,
+        calibs=None if gen2_calib_repo is None else [CalibRepo(path=gen2_calib_repo, curated=curated)],
+    )
 
 
 def _export_for_copy(dataset, repo):
@@ -120,12 +147,12 @@ def _export_for_copy(dataset, repo):
         # Need all detectors, even those without data, for visit definition
         contents.saveDataIds(butler.registry.queryDataIds({"detector"}).expanded())
         contents.saveDatasets(butler.registry.queryDatasets(datasetType=..., collections=...))
-        # Explicitly save the calibration collection.
+        # Explicitly save the calibration and chained collections.
         # Do _not_ include the RUN collections here because that will export
         # an empty raws collection, which ap_verify assumes does not exist
         # before ingest.
-        for collection in butler.registry.queryCollections(
-                ..., collectionTypes={daf_butler.CollectionType.CALIBRATION}):
+        targetTypes = {daf_butler.CollectionType.CALIBRATION, daf_butler.CollectionType.CHAINED}
+        for collection in butler.registry.queryCollections(..., collectionTypes=targetTypes):
             contents.saveCollection(collection)
 
 
