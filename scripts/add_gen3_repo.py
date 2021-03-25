@@ -52,10 +52,11 @@ def main():
 
     mode = "copy" if args.drop_gen2 else "relsymlink"
 
+    # behaves as if curated=True, regardless of argument, because no calib repo
     log.info("Converting templates...")
     gen2_templates = dataset.templateLocation
     _migrate_gen2_to_gen3(dataset, gen2_templates, None, gen3_repo, mode,
-                          curated=False,
+                          curated=True,
                           config_file="convertRepo_templates.py")
 
     log.info("Converting calibs...")
