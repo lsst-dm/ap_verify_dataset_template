@@ -12,6 +12,7 @@ import shutil
 import tempfile
 
 import lsst.log
+import lsst.skymap
 import lsst.daf.persistence as daf_persistence
 import lsst.daf.butler as daf_butler
 from lsst.obs.base.gen2to3 import CalibRepo, ConvertRepoTask
@@ -51,12 +52,16 @@ def main():
     os.makedirs(gen3_repo)
 
     mode = "copy" if args.drop_gen2 else "relsymlink"
+    hasTemplates = os.path.exists(os.path.join(dataset.configLocation, "convertRepo_templates.py"))
 
-    log.info("Converting templates...")
-    gen2_templates = dataset.templateLocation
-    _migrate_gen2_to_gen3(dataset, gen2_templates, None, gen3_repo, mode,
-                          curated=False,
-                          config_file="convertRepo_templates.py")
+    if hasTemplates:
+        # behaves as if curated=True, regardless of argument,
+        # because no calib repo
+        log.info("Converting templates...")
+        gen2_templates = dataset.templateLocation
+        _migrate_gen2_to_gen3(dataset, gen2_templates, None, gen3_repo, mode,
+                              curated=True,
+                              config_file="convertRepo_templates.py")
 
     log.info("Converting calibs...")
     with tempfile.TemporaryDirectory() as tmp:
@@ -66,8 +71,9 @@ def main():
         gen2_repo = workspace.dataRepo
         gen2_calibs = workspace.calibRepo
         # Files stored in the Gen 2 part of the dataset, can be safely linked
+        # If curated calibs weren't handled with templates, convert them now
         _migrate_gen2_to_gen3(dataset, gen2_repo, gen2_calibs, gen3_repo, mode,
-                              curated=False,
+                              curated=(not hasTemplates),
                               config_file="convertRepo_calibs.py")
         # Our refcats and defects are temporary files, and must not be linked
         _migrate_gen2_to_gen3(dataset, gen2_repo, gen2_calibs, gen3_repo, mode="copy",
@@ -154,6 +160,8 @@ def _export_for_copy(dataset, repo):
         targetTypes = {daf_butler.CollectionType.CALIBRATION, daf_butler.CollectionType.CHAINED}
         for collection in butler.registry.queryCollections(..., collectionTypes=targetTypes):
             contents.saveCollection(collection)
+        # Export skymap collection even if it is empty
+        contents.saveCollection(lsst.skymap.BaseSkyMap.SKYMAP_RUN_COLLECTION_NAME)
 
 
 if __name__ == "__main__":
