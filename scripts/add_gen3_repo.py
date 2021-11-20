@@ -7,8 +7,10 @@ lets a dataset be permanently migrated to Gen 3 instead.
 """
 
 import argparse
+import logging
 import os
 import shutil
+import sys
 import tempfile
 
 import lsst.log
@@ -40,6 +42,10 @@ class _Parser(argparse.ArgumentParser):
 
 
 def main():
+    # Ensure logs from tasks are visible
+    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+    lsst.log.configure_pylog_MDC("DEBUG", MDC_class=None)
+
     args = _Parser().parse_args()
     log = lsst.log.Log.getLogger("add_gen3_repo")
 
