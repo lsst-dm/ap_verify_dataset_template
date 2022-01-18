@@ -14,6 +14,7 @@ path                  | description
 `doc`                 | Contains Sphinx package documentation for the dataset. This documentation may be linked to from other packages, such as `ap_verify`.
 `raw`                 | To be populated with raw data. Data files do not need to follow a specific subdirectory structure. Currently contains a single small fits file (taken from `obs_test`) to test `git-lfs` functionality.
 `config`              | To be populated with dataset-specific configs. Currently empty.
+`pipelines`           | To be populated with dataset-specific pipelines. Currently contains three example files specialized for ImSim data.
 `preloaded`           | To be populated with a Gen 3 Butler repository (see below). This repository must never be written to; instead, it should be copied to a separate location before use (this is handled automatically by `ap_verify`, see below).
 `dataIds.list`        | List of dataIds in this repo. For use in running Tasks. Currently set to run all Ids.
 
