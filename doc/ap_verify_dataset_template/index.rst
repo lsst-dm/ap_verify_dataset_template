@@ -25,8 +25,6 @@ This package provides a number of demonstration files copied from `obs_test <htt
 See that package for detailed file and provenance information.
 
 This package contains only raw files, with no calibration information or difference imaging templates.
-It contains a small Gaia DR1 reference catalog for illustrating the catalog format.
-The catalog is not guaranteed to overlap with the footprint of the raw data.
 
 .. _ap_verify_dataset_template-contributing:
 
