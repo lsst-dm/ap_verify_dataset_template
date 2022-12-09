@@ -1,1 +1,6 @@
-setupRequired(obs_test)
+setupRequired(obs_lsst)
+# If the repository contains templates, include the PSF package used to make them.
+# This ensures they can be loaded even if the dependency isn't picked up elsewhere.
+# Most coadd pipeliness use one of the following:
+# setupRequired(meas_extensions_psfex)
+# setupRequired(meas_extensions_piff)

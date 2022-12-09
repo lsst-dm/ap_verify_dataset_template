@@ -5,7 +5,7 @@ Template repo for developing datasets for use with ap_verify.
 
 This repo is designed to be used as a template for developing new datasets for integration into [`ap_verify`](https://github.com/lsst/ap_verify/).
 
-Datasets must link to the corresponding instrument's obs package; this template is currently set up for using [`obs_test`](https://github.com/lsst/obs_test/) as a placeholder.
+Datasets must link to the corresponding instrument's obs package; this template is currently set up for using [`obs_lsst`](https://github.com/lsst/obs_lsst/) as a placeholder.
 
 Relevant Files and Directories
 ------------------------------
