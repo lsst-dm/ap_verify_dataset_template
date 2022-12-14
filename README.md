@@ -7,6 +7,8 @@ This repo is designed to be used as a template for developing new datasets for i
 
 Datasets must link to the corresponding instrument's obs package; this template is currently set up for using [`obs_lsst`](https://github.com/lsst/obs_lsst/) as a placeholder.
 
+NOTE: many files have hardcoded references to the package name; do a search-and-replace for "ap_verify_dataset_template" before attempting other customizations for your dataset.
+
 Relevant Files and Directories
 ------------------------------
 path                  | description
