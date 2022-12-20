@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# This file is part of ap_verify_ci_hits2015.
+# This file is part of ap_verify_dataset_template.
 #
 # Developed for the LSST Data Management System.
 # This product includes software developed by the LSST Project
@@ -25,6 +25,9 @@ fields and observation times.
 
 Running this script allows for updates to the ephemerides to be incorporated
 into the dataset.
+
+This script takes no command-line arguments; it infers everything it needs from
+the `preloaded/` repository.
 """
 
 import glob
@@ -36,7 +39,7 @@ import tempfile
 
 import lsst.log
 import lsst.sphgeom
-from lsst.daf.butler import Butler, FileDataset
+from lsst.daf.butler import Butler
 import lsst.obs.base
 
 
@@ -46,11 +49,11 @@ lsst.log.configure_pylog_MDC("DEBUG", MDC_class=None)
 
 # Avoid explicit references to dataset package to maximize portability.
 SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
-PIPE_DIR = os.path.join(SCRIPT_DIR, "..", "pipelines")
-RAW_DIR = os.path.join(SCRIPT_DIR, "..", "raw")
+PIPE_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "pipelines"))
+RAW_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "raw"))
 RAW_RUN = "raw"
 EPHEM_DATASET = "visitSsObjects"
-DEST_DIR = os.path.join(SCRIPT_DIR, "..", "preloaded")
+DEST_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "preloaded"))
 DEST_RUN = "sso/cached"
 
 
@@ -113,12 +116,10 @@ def _ingest_raws(repo, raw_dir, run):
         The name of the run into which to import the raws.
     """
     raws = glob.glob(os.path.join(raw_dir, '**', '*.fits.fz'), recursive=True)
-    # explicit config workaround for DM-971
-    ingester = lsst.obs.base.RawIngestTask(butler=repo, config=lsst.obs.base.RawIngestConfig())
+    ingester = lsst.obs.base.RawIngestTask(butler=repo)
     ingester.run(raws, run=run)
     exposures = set(repo.registry.queryDataIds(["exposure"]))
-    # explicit config workaround for DM-971
-    definer = lsst.obs.base.DefineVisitsTask(butler=repo, config=lsst.obs.base.DefineVisitsConfig())
+    definer = lsst.obs.base.DefineVisitsTask(butler=repo)
     definer.run(exposures)
 
 
