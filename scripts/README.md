@@ -8,10 +8,14 @@ These scripts are *not* intended to be used as-is; they may require some fine-tu
 As with the rest of the ap_verify_dataset_template repository, there may be hard-coded references to the package in the scripts themselves.
 Be sure to update any such references before proceeding.
 
+The scripts are designed to be modular, and can be called either all at once (through `make_all.sh`), or individually.
+See each script's docstring for usage instructions; those scripts that take arguments also support `--help`.
+
 Contents
 --------
 path                     | description
 :------------------------|:-----------------------------
+make_all.sh              | Rebuild everything from scratch.
 generate_templates.sh    | Create templates in an external repo (such as `repo/main`) that cover this dataset's area.
 make_empty_repo.sh       | Replace `preloaded/` with a repo containing only dimension definitions and standard "curated" calibs.
 import_templates.py      | Transfer templates from an external repo (such as `repo/main`) and register them in `preloaded/`.
