@@ -1,5 +1,5 @@
 #!/bin/bash
-# This file is part of ap_verify_ci_hits2015.
+# This file is part of ap_verify_dataset_template.
 #
 # Developed for the LSST Data Management System.
 # This product includes software developed by the LSST Project
@@ -28,26 +28,27 @@
 set -e
 
 
+REPO_DIR="${AP_VERIFY_DATASET_TEMPALTE_DIR:?'dataset is not set up'}/preloaded/"
+INST_CLASS=lsst.obs.lsst.LsstCam
+INST_NAME=LSSTCam
+
+
 ########################################
 # Repository creation
 
-REPO_DIR="${AP_VERIFY_CI_DC2_DIR:?'dataset is not set up'}/preloaded/"
-
 rm -rf "$REPO_DIR"
 butler create "$REPO_DIR"
-butler register-instrument "$REPO_DIR" lsst.obs.lsst.LsstCamImSim
-echo "Created empty LSSTCam-ImSim repo in ${REPO_DIR}."
+butler register-instrument "$REPO_DIR" $INST_CLASS
+echo "Created empty $INST_NAME repo in ${REPO_DIR}."
 
 
 ########################################
 # Minimal contents
 
-STD_CALIB="LSSTCam-imSim/calib"
+STD_CALIB="${INST_NAME}/calib"
 CURATED_CALIB="${STD_CALIB}/curated"
-# TODO: do we actually need this in the final collection chain?
-# UNBOUNDED_CALIB="${STD_CALIB}/unbounded"
 
-butler write-curated-calibrations "$REPO_DIR" lsst.obs.lsst.LsstCamImSim \
+butler write-curated-calibrations "$REPO_DIR" $INST_CLASS \
     --collection "$CURATED_CALIB"
 butler collection-chain "$REPO_DIR" "$STD_CALIB" "$CURATED_CALIB"
 echo "Added curated calibrations to ${REPO_DIR}."
