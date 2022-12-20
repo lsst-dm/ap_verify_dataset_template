@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# This file is part of ap_verify_ci_hits2015.
+# This file is part of ap_verify_dataset_template.
 #
 # Developed for the LSST Data Management System.
 # This product includes software developed by the LSST Project
@@ -28,13 +28,12 @@ into the dataset.
 
 import argparse
 import logging
+import os
 import sys
-
-from astropy.coordinates import SkyCoord
 
 import lsst.log
 import lsst.sphgeom
-from lsst.daf.butler import Butler, CollectionType, DatasetRef, DatasetType, FileDataset
+from lsst.daf.butler import Butler, CollectionType, FileDataset
 
 
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
@@ -44,17 +43,13 @@ lsst.log.configure_pylog_MDC("DEBUG", MDC_class=None)
 ########################################
 # Fields and catalogs to process
 
-# Use SkyCoord because it provides built-in sexagecimal and HMS support.
-FIELDS = [SkyCoord("10h00m28.800s", "+02d12m36.00s"),  # field 26 (2014:04)
-          SkyCoord("10h20m28.800s", "-06d31m12.00s"),  # field 40 (2014:10)
-          SkyCoord("10h21m52.800s", "-04d57m00.00s"),  # field 42 (2014:09)
-          ]
-FIELD_RADIUS = 2.0  # degrees
+DATA_IDS = [dict(detector=164, visit=982985, instrument="LSSTCam"),
+            dict(detector=168, visit=943296, instrument="LSSTCam"),
+            ]
+REFCAT_NAMES = {"gaia_dr2_20200414", "ps1_pv3_3pi_20170110"}
 
-# Key is catalog name in source repo, value is name in ap_verify_ci_hits2015.
-REFCATS = {"gaia_dr2_20200414": "gaia",
-           "ps1_pv3_3pi_20170110": "panstarrs",
-           }
+SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
+REPO_LOCAL = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "preloaded"))
 
 
 ########################################
@@ -75,143 +70,58 @@ args = _make_parser().parse_args()
 ########################################
 # Identify all required shards
 
-HTM_LEVEL = 7
 
-
-def _get_shards(centers, radius):
-    """Return all shards overlapping a set of fields.
+def _find_refcats(butler, refcats, data_ids):
+    """Return refcats overlapping a set of exposures.
 
     Parameters
     ----------
-    centers : iterable [`astropy.coordinates.SkyCoord`]
-        The right ascension and declination of the field centers.
-    radius : `float`
-        The radius of each field, in degrees.
+    butler : `lsst.daf.butler.Butler`
+        The butler to query for the refcats.
+    refcats : iterable [`str`]
+        The names of the refcats to search.
+    data_ids : iterable [`dict` or `lsst.daf.butler.DataCoordinate`]
+        The IDs of the exposures for which refcats are needed.
 
     Returns
     -------
-    shards : iterable [`tuple` [`int`]]
-        The ranges of consecutive HTM indices that overlap any of the fields.
-        Individual ranges may overlap. Each range is represented as a tuple of
-        the lowest and the highest index in the range, inclusive (thus, an
-        isolated index ``i`` is represented by ``(i, i)``).
+    refcats : iterable [`lsst.daf.butler.DatasetRef`]
+        The refcats that overlap with ``data_ids``.
     """
-    indexer = lsst.sphgeom.HtmPixelization(HTM_LEVEL)
-    shards = []
-    for center in centers:
-        vector = center.represent_as('cartesian').xyz.value
-        region = lsst.sphgeom.Circle(lsst.sphgeom.UnitVector3d(vector[0], vector[1], vector[2]),
-                                     lsst.sphgeom.Angle.fromDegrees(radius))
-        # Convert from half-open to fully-closed intervals.
-        shards.extend((start, end-1) for (start, end) in indexer.envelope(region))
-    return shards
+    subquery = "(instrument='{instrument}' and detector={detector} and visit={visit})"
+    where = " or ".join(subquery.format(**id) for id in data_ids)
+    return set(butler.registry.queryDatasets(refcats, where=where))
 
 
-logging.info("Identifying refcat shards...")
-shards = _get_shards(FIELDS, FIELD_RADIUS)
-if not shards:
-    raise RuntimeError("No HTM shards found; coordinates are likely corrupted.")
-logging.debug("%d shard ranges found", len(shards))
-
-
-def _make_range(start, end):
-    """Represent a range of contiguous integers in Butler dimension
-    expression syntax.
-
-    Parameters
-    ----------
-    start, end : `int`
-        The first and last elements of the range, *inclusive*.
-        Assumes ``start <= end``.
-
-    Returns
-    -------
-    range : `str`
-        The Butler syntax for the range.
-    """
-    if start == end:
-        return str(start)
-    else:
-        return f"{start}..{end}"
-
-
-id_ranges = [_make_range(start, end) for (start, end) in shards]
+src_butler = Butler(args.src_dir, collections=args.src_collection, writeable=False)
+logging.info("Searching for refcats in %s:%s...", args.src_dir, args.src_collection)
+refcats = _find_refcats(src_butler, REFCAT_NAMES, DATA_IDS)
+if not refcats:
+    raise RuntimeError("No refcats found.")
+logging.debug("%d refcat shards found", len(refcats))
 
 
 ########################################
 # Transfer shards
 
-DEST_DIR = "${AP_VERIFY_CI_HITS2015_DIR}/preloaded/"
 STD_REFCAT = "refcats"
-DEST_RUN = "refcats/imported"
+DEST_RUN = "refcats/ingested"
 
+dest_butler = Butler(REPO_LOCAL, run=DEST_RUN, writeable=True)
 
-def _rename_dataset_type(type, name):
-    """Create a DatasetType that differs from an existing one in name only.
+logging.info("Preparing destination repository %s...", REPO_LOCAL)
+dest_butler.registry.registerCollection(DEST_RUN, CollectionType.RUN)
+for name in REFCAT_NAMES:
+    dataset_type = src_butler.registry.getDatasetType(name)
+    dest_butler.registry.registerDatasetType(dataset_type)
 
-    Parameters
-    ---------
-    type : `lsst.daf.butler.DatasetType`
-        The type to rename.
-    name : `str`
-        The new name to adopt.
-
-    Returns
-    -------
-    new_type : `lsst.daf.butler.DatasetType`
-        The new DatasetType.
-    """
-    return DatasetType(name, type.dimensions, type.storageClass, type.parentStorageClass)
-
-
-src_repo = Butler(args.src_dir, collections=args.src_collection, writeable=False)
-dest_repo = Butler(DEST_DIR, run=DEST_RUN, writeable=True)
-
-
-def _remove_refcat_run(butler, run):
-    """Remove a refcat run and any references from a repository.
-
-    Parameters
-    ----------
-    butler : `lsst.daf.butler.Butler`
-        The repository from which to remove ``run``.
-    run : `str`
-        The run to remove, if it exists.
-    """
-    try:
-        refcat_runs = butler.registry.getCollectionChain(STD_REFCAT)
-        if run in refcat_runs:
-            new_runs = list(refcat_runs)
-            new_runs.remove(run)
-            butler.registry.setCollectionChain(STD_REFCAT, new_runs)
-    except (lsst.daf.butler.registry.MissingCollectionError, TypeError):
-        pass  # No STD_REFCAT chain; nothing to do
-
-    try:
-        butler.removeRuns([run], unstore=True)
-    except lsst.daf.butler.registry.MissingCollectionError:
-        pass  # Already removed; nothing to do
-
-
-logging.info("Preparing destination repository %s...", DEST_DIR)
-_remove_refcat_run(dest_repo, DEST_RUN)
-dest_repo.registry.registerCollection(DEST_RUN, CollectionType.RUN)
-for src_cat, dest_cat in REFCATS.items():
-    src_type = src_repo.registry.getDatasetType(src_cat)
-    dest_type = _rename_dataset_type(src_type, dest_cat)
-    dest_repo.registry.registerDatasetType(dest_type)
-dest_repo.registry.refresh()
-
-logging.info("Searching for refcats in %s:%s...", args.src_dir, args.src_collection)
-query = f"htm{HTM_LEVEL} in ({','.join(id_ranges)})"
-datasets = []
-for src_ref in src_repo.registry.queryDatasets(REFCATS.keys(), where=query, findFirst=True):
-    src_type = src_ref.datasetType
-    dest_type = _rename_dataset_type(src_type, REFCATS[src_type.name])
-    dest_ref = DatasetRef(dest_type, src_ref.dataId)
-    datasets.append(FileDataset(path=src_repo.getURI(src_ref), refs=dest_ref))
+datasets = [FileDataset(path=src_butler.getURI(ref), refs=ref) for ref in refcats]
 
 logging.info("Copying refcats...")
-dest_repo.ingest(*datasets, transfer="copy")
+dest_butler.ingest(*datasets, transfer="copy")
 
-logging.info("%d refcat shards copied to %s:%s", len(datasets), DEST_DIR, DEST_RUN)
+dest_butler.registry.registerCollection(STD_REFCAT, CollectionType.CHAINED)
+# We want to use these refcats, and no other.
+dest_butler.registry.setCollectionChain(STD_REFCAT, [DEST_RUN])
+
+logging.info("%d refcat shards copied to %s:%s", len(datasets), REPO_LOCAL, DEST_RUN)
