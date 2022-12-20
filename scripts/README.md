@@ -13,3 +13,4 @@ Contents
 path                  | description
 :---------------------|:-----------------------------
 make_empty_repo.sh    | Replace `preloaded/` with a repo containing only dimension definitions and standard "curated" calibs.
+import_templates.py   | Transfer templates from another repo (such as `repo/main`) and register them in `preloaded/`.
