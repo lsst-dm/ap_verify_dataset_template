@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# This file is part of ap_verify_ci_dc2.
+# This file is part of ap_verify_dataset_template.
 #
 # Developed for the LSST Data Management System.
 # This product includes software developed by the LSST Project
@@ -47,13 +47,23 @@ logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 lsst.log.configure_pylog_MDC("DEBUG", MDC_class=None)
 
 
+# raw-like data IDs used to query for calibs, since we can't query them directly.
+DATA_IDS = [dict(detector=164, visit=982985, instrument="LSSTCam"),
+            dict(detector=168, visit=943296, instrument="LSSTCam"),
+            ]
+CALIB_NAMES = ["bias", "dark", "flat"]
+
+DATASET_REPO = os.path.join(os.environ["AP_VERIFY_DATASET_TEMPLATE_DIR"], "preloaded")
+DATASET_CALIB_COLLECTION = "LSSTCam/calib"
+
+
 ########################################
 # Command-line options
 
 def _make_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-b", dest="src_dir", default="/repo/dc2",
-                        help="Repo to import from, defaults to '/repo/dc2'.")
+    parser.add_argument("-b", dest="src_dir", default="/repo/main",
+                        help="Repo to import from, defaults to '/repo/main'.")
     parser.add_argument("-c", dest="src_collection", required=True,
                         help="Calib collection to import from. Must be a chained collection before DM-37409.")
     return parser
@@ -64,13 +74,6 @@ args = _make_parser().parse_args()
 
 ########################################
 # Export/Import
-
-DATA_IDS = [dict(detector=164, visit=982985, physical_filter="r_sim_1.4", instrument="LSSTCam-imSim"),
-            dict(detector=168, visit=943296, physical_filter="r_sim_1.4", instrument="LSSTCam-imSim")]
-CALIB_NAMES = ("bias", "dark", "flat")
-CALIB_COLLECTION = "LSSTCam-imSim/calib"
-DATASET_REPO = os.path.join(os.environ["AP_VERIFY_CI_DC2_DIR"], "preloaded")
-
 
 def _export(butler, export_file):
     """Export the files to be copied.
@@ -89,10 +92,10 @@ def _export(butler, export_file):
         The names of the calibration collections containing validities.
     """
     with butler.export(filename=export_file, transfer=None) as contents:
-        for name in CALIB_NAMES:
-            for data_id in DATA_IDS:
-                calibs = butler.registry.queryDatasets(name, dataId=data_id, collections=butler.collections)
-                contents.saveDatasets(calibs)
+        for data_id in DATA_IDS:
+            calibs = butler.registry.queryDatasets(CALIB_NAMES, dataId=data_id,
+                                                   collections=butler.collections)
+            contents.saveDatasets(calibs)
 
         calib_collections = set()
         for collection in butler.collections:
@@ -153,9 +156,9 @@ with tempfile.NamedTemporaryFile(suffix=".yaml") as export_file:
     calib_collections = _export(src, export_file.name)
     dest = Butler(DATASET_REPO, writeable=True)
     _import(dest, export_file.name, args.src_dir)
-    dest.registry.registerCollection(CALIB_COLLECTION, CollectionType.CHAINED)
-    chain = list(dest.registry.getCollectionChain(CALIB_COLLECTION))
+    dest.registry.registerCollection(DATASET_CALIB_COLLECTION, CollectionType.CHAINED)
+    chain = list(dest.registry.getCollectionChain(DATASET_CALIB_COLLECTION))
     chain.extend(calib_collections)
-    dest.registry.setCollectionChain(CALIB_COLLECTION, chain)
+    dest.registry.setCollectionChain(DATASET_CALIB_COLLECTION, chain)
 
-logging.info(f"Calibs stored in {DATASET_REPO}:{CALIB_COLLECTION}.")
+logging.info(f"Calibs stored in {DATASET_REPO}:{DATASET_CALIB_COLLECTION}.")
