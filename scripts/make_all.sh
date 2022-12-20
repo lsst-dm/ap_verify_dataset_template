@@ -37,7 +37,7 @@ set -e
 set -x
 
 SCRIPT_DIR="$( dirname -- "${BASH_SOURCE[0]}" )"
-DATASET_REPO="${AP_VERIFY_DATASET_TEMPLATE_DIR:?'dataset is not set up'}/preloaded/"
+DATASET_REPO="${SCRIPT_DIR}/../preloaded/"
 
 INSTRUMENT=LSSTCam
 UMBRELLA_COLLECTION="${INSTRUMENT}/defaults"  # Hardcoded into ap_verify, do not change!

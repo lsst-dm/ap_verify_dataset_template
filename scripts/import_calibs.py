@@ -53,7 +53,9 @@ DATA_IDS = [dict(detector=164, visit=982985, instrument="LSSTCam"),
             ]
 CALIB_NAMES = ["bias", "dark", "flat"]
 
-DATASET_REPO = os.path.join(os.environ["AP_VERIFY_DATASET_TEMPLATE_DIR"], "preloaded")
+# Avoid explicit references to dataset package to maximize portability.
+SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
+DATASET_REPO = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "preloaded"))
 DATASET_CALIB_COLLECTION = "LSSTCam/calib"
 
 

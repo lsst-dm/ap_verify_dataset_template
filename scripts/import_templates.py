@@ -49,7 +49,9 @@ lsst.log.configure_pylog_MDC("DEBUG", MDC_class=None)
 
 # Template type **must** match that used in the dataset's pipelines, including ApTemplate.yaml if it exists.
 TEMPLATE_TYPE = "goodSeeing"
-DATASET_REPO = os.path.join(os.environ["AP_VERIFY_DATASET_TEMPLATE_DIR"], "preloaded")
+# Avoid explicit references to dataset package to maximize portability.
+SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
+DATASET_REPO = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "preloaded"))
 
 
 ########################################

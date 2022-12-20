@@ -28,7 +28,8 @@
 set -e
 
 
-REPO_DIR="${AP_VERIFY_DATASET_TEMPALTE_DIR:?'dataset is not set up'}/preloaded/"
+SCRIPT_DIR="$( dirname -- "${BASH_SOURCE[0]}" )"
+REPO_DIR="${SCRIPT_DIR}/../preloaded/"
 INST_CLASS=lsst.obs.lsst.LsstCam
 INST_NAME=LSSTCam
 

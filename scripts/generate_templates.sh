@@ -39,7 +39,8 @@ set -e
 ########################################
 # Raw template exposures to process
 
-PIPELINE="${AP_VERIFY_DATASET_TEMPLATE_DIR}/pipelines/ApTemplate.yaml"
+SCRIPT_DIR="$( dirname -- "${BASH_SOURCE[0]}" )"
+PIPELINE="${SCRIPT_DIR}/../pipelines/ApTemplate.yaml"
 INSTRUMENT=LSSTCam
 DEFAULT_COLLECTION=${INSTRUMENT}/defaults
 SKYMAP=latiss_v1
