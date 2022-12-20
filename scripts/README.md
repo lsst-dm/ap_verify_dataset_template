@@ -16,3 +16,4 @@ generate_templates.sh | Create templates in an external repo (such as `repo/main
 make_empty_repo.sh    | Replace `preloaded/` with a repo containing only dimension definitions and standard "curated" calibs.
 import_templates.py   | Transfer templates from an external repo (such as `repo/main`) and register them in `preloaded/`.
 import_calibs.py      | Transfer calibs from an external repo (such as `repo/main`) and register them in `preloaded/`. Calibs are assumed to be generated as part of the regular reprocessing of the source repo, and there's no script for making them from scratch.
+ingest_refcats.py     | Transfer refcats from an external repo (such a `repo/main`) and register them in `preloaded/`.
