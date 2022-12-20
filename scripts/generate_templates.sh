@@ -1,5 +1,5 @@
 #!/bin/bash
-# This file is part of ap_verify_ci_hits2015.
+# This file is part of ap_verify_dataset_template.
 #
 # Developed for the LSST Data Management System.
 # This product includes software developed by the LSST Project
@@ -21,15 +21,15 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # Script for automatically generating differencing templates for this dataset.
-# It takes roughly 5 hours to run on lsst-devl.
+# It takes roughly <TBD> hours to run on rubin-devl.
 # Running this script allows for templates to incorporate pipeline
 # improvements. It makes no attempt to update the set of input exposures; they
 # are hard-coded into the file.
 #
 # Example:
-# $ nohup generate_templates_gen3.sh -c "u/me/DM-123456-calib" -o "u/me/DM-123456-template" &
+# $ nohup generate_templates.sh -c "u/me/DM-123456-calib" -o "u/me/DM-123456-template" &
 # produces templates in /repo/main in the u/me/DM-123456-template collection.
-# See generate_templates_gen3.sh -h for more options.
+# See generate_templates.sh -h for more options.
 
 
 # Abort script on any error
@@ -39,19 +39,23 @@ set -e
 ########################################
 # Raw template exposures to process
 
-# Exposure filter is a safeguard against queries that can't be constrained by
-# tract/patch, or against inclusion of non-HiTS data. Patch filter specifies
-# the area covered by the CI dataset in the hsc_rings_v1 skymap.
+PIPELINE="${AP_VERIFY_DATASET_TEMPLATE_DIR}/pipelines/ApTemplate.yaml"
+INSTRUMENT=LSSTCam
+DEFAULT_COLLECTION=${INSTRUMENT}/defaults
+SKYMAP=latiss_v1
 
-FIELDS="'Blind14A_09', 'Blind14A_10'"
-EXPOSURES="288934, 288935, 288975, 288976, 289015, 289016, 289055, 289056, 289160, 289161, 289201,
-           289202, 289242, 289243, 289283, 289284, 289367, 289368, 289408, 289409, 289449, 289450,
-           289492, 289493, 289572, 289573, 289613, 289614, 289655, 289656, 289696, 289697, 289782,
-           289783, 289818, 289820, 289828, 289870, 289871, 289912, 289913"
+# The following variables can be any expression that's valid in a Butler query's IN clause.
+
+# Mapping indexed by tract ID
 declare -A PATCHES
-PATCHES[8363]="76..79"
-PATCHES[8604]="1, 2, 3, 10, 11, 12, 20, 21"
-DATE_CUTOFF=20141231
+PATCHES[1234]="27..42"
+PATCHES[1235]="1, 5, 22"
+
+# Exposure filter is a safeguard against queries that can't be constrained by
+# tract/patch, or against inclusion of data from other surveys. It also lets
+# science users curate the coadd inputs, if desired.
+EXPOSURES="288934, 288935, 288975, 288976, 289015, 289016, 289055, 289056, 289160, 289161, 289201,
+           289783, 289818, 289820, 289828, 289870, 289871, 289912, 289913"
 
 
 ########################################
@@ -103,9 +107,8 @@ parse_args "$@"
 ########################################
 # Generate templates
 
-FILTER="instrument='DECam' AND skymap='hsc_rings_v1'
-        AND exposure IN (${EXPOSURES}) AND detector NOT IN (2, 61)
-        AND ("
+FILTER="instrument='$INSTRUMENT' AND skymap='$SKYMAP'
+        AND exposure IN (${EXPOSURES}) AND ("
 OR=""
 for tract in ${!PATCHES[*]}; do
     FILTER="${FILTER} ${OR} (tract=${tract} AND patch IN (${PATCHES[${tract}]}))"
@@ -114,16 +117,13 @@ done
 FILTER="${FILTER})"
 
 
-pipetask run -j 12 -d "${FILTER}" -b ${BUTLER_REPO} -i DECam/defaults,${CALIBS} -o ${TEMPLATES} \
-    -p $AP_PIPE_DIR/pipelines/DarkEnergyCamera/RunIsrForCrosstalkSources.yaml
-
 # Run single-frame processing and coaddition separately, so that isolated
 # errors in SFP do not prevent coaddition from running. Instead, coadds will
 # use all successful runs, ignoring any failures.
+pipetask run -j 12 -d "${FILTER}" -b ${BUTLER_REPO} -i ${CALIBS},${DEFAULT_COLLECTION} -o ${TEMPLATES} \
+    -p ${PIPELINE}#singleFrameAp
 pipetask run -j 12 -d "${FILTER}" -b ${BUTLER_REPO} -o ${TEMPLATES} \
-    -p $AP_VERIFY_CI_HITS2015_DIR/pipelines/ApTemplate.yaml#singleFrameAp
-pipetask run -j 12 -d "${FILTER}" -b ${BUTLER_REPO} -o ${TEMPLATES} \
-    -p $AP_VERIFY_CI_HITS2015_DIR/pipelines/ApTemplate.yaml#makeTemplate
+    -p ${PIPELINE}#makeTemplate
 
 
 ########################################
