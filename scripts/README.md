@@ -12,3 +12,4 @@ Contents
 --------
 path                  | description
 :---------------------|:-----------------------------
+make_empty_repo.sh    | Replace `preloaded/` with a repo containing only dimension definitions and standard "curated" calibs.
