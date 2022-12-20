@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# This file is part of ap_verify_ci_hits2015.
+# This file is part of ap_verify_dataset_template.
 #
 # Developed for the LSST Data Management System.
 # This product includes software developed by the LSST Project
@@ -26,10 +26,10 @@ The datasets can be from any source, including the generate_templates_gen3.sh
 script in this directory.
 
 Example:
-$ python import_templates_gen3.py -t "u/me/DM-123456-template"
-imports deep templates from u/me/DM-123456-template in /repo/main to
-templates/deep in this dataset's preloaded repo. See
-generate_templates_gen3.sh -h for more options.
+$ python import_templates.py -t "u/me/DM-123456-template"
+imports goodSeeing templates from u/me/DM-123456-template in /repo/main to
+templates/goodSeeing in this dataset's preloaded repo. See
+generate_templates.sh -h for more options.
 """
 
 import argparse
@@ -47,6 +47,11 @@ logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 lsst.log.configure_pylog_MDC("DEBUG", MDC_class=None)
 
 
+# Template type **must** match that used in the dataset's pipelines.
+TEMPLATE_TYPE = "goodSeeing"
+DATASET_REPO = os.path.join(os.environ["AP_VERIFY_DATASET_TEMPLATE_DIR"], "preloaded")
+
+
 ########################################
 # Command-line options
 
@@ -56,6 +61,8 @@ def _make_parser():
                         help="Repo to import from, defaults to '/repo/main'.")
     parser.add_argument("-t", dest="src_collection", required=True,
                         help="Template collection to import from.")
+    parser.add_argument("--where",
+                        help="Query string for filtering templates.")
     return parser
 
 
@@ -65,13 +72,11 @@ args = _make_parser().parse_args()
 ########################################
 # Export/Import
 
-TEMPLATE_TYPE = "deep"
 TEMPLATE_NAME = TEMPLATE_TYPE + "Coadd"
 TEMPLATE_COLLECT = "templates/" + TEMPLATE_TYPE
-DATASET_REPO = os.path.join(os.environ["AP_VERIFY_CI_HITS2015_DIR"], "preloaded")
 
 
-def _export(butler, export_file):
+def _export(butler, export_file, template_query):
     """Export the files to be copied.
 
     Parameters
@@ -81,6 +86,8 @@ def _export(butler, export_file):
         exported from.
     export_file : `str`
         A path pointing to a file to contain the export results.
+    template_query : `str`
+        A string expression selecting which templates to export.
 
     Returns
     -------
@@ -90,12 +97,16 @@ def _export(butler, export_file):
     skymaps = butler.registry.queryDataIds("skymap", datasets=TEMPLATE_NAME, collections=butler.collections)
     skymap_query = f"skymap IN ({', '.join(repr(id['skymap']) for id in skymaps)})"
     with butler.export(filename=export_file, transfer=None) as contents:
+        # Export skymap(s)
         contents.saveDatasets(
             butler.registry.queryDatasets(
                 "skyMap", collections=lsst.skymap.BaseSkyMap.SKYMAP_RUN_COLLECTION_NAME,
                 findFirst=True, where=skymap_query),
             elements=set())
+
+        # Export templates
         templates = butler.registry.queryDatasets(TEMPLATE_NAME, collections=butler.collections,
+                                                  where=template_query,
                                                   findFirst=True)
         contents.saveDatasets(templates)
         # Do not save butler.collections -- if they are RUN collections, it's
@@ -121,7 +132,7 @@ def _import(butler, export_file, base_dir):
 
 with tempfile.NamedTemporaryFile(suffix=".yaml") as export_file:
     src = Butler(args.src_dir, collections=args.src_collection, writeable=False)
-    runs = _export(src, export_file.name)
+    runs = _export(src, export_file.name, args.where)
     dest = Butler(DATASET_REPO, writeable=True)
     _import(dest, export_file.name, args.src_dir)
     dest.registry.registerCollection(TEMPLATE_COLLECT, CollectionType.CHAINED)
