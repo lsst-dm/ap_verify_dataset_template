@@ -105,23 +105,15 @@ logging.debug("%d refcat shards found", len(refcats))
 # Transfer shards
 
 STD_REFCAT = "refcats"
-DEST_RUN = "refcats/ingested"
 
-dest_butler = Butler(REPO_LOCAL, run=DEST_RUN, writeable=True)
-
-logging.info("Preparing destination repository %s...", REPO_LOCAL)
-dest_butler.registry.registerCollection(DEST_RUN, CollectionType.RUN)
-for name in REFCAT_NAMES:
-    dataset_type = src_butler.registry.getDatasetType(name)
-    dest_butler.registry.registerDatasetType(dataset_type)
-
-datasets = [FileDataset(path=src_butler.getURI(ref), refs=ref) for ref in refcats]
+dest_butler = Butler(REPO_LOCAL, writeable=True)
 
 logging.info("Copying refcats...")
-dest_butler.ingest(*datasets, transfer="copy")
+# Copy to ensure that dataset is portable.
+dest_butler.transfer_from(src_butler, refcats, transfer="copy", register_dataset_types=True)
 
 dest_butler.registry.registerCollection(STD_REFCAT, CollectionType.CHAINED)
 # We want to use these refcats, and no other.
-dest_butler.registry.setCollectionChain(STD_REFCAT, [DEST_RUN])
+dest_butler.registry.setCollectionChain(STD_REFCAT, {ref.run for ref in refcats})
 
-logging.info("%d refcat shards copied to %s:%s", len(datasets), REPO_LOCAL, DEST_RUN)
+logging.info("%d refcat shards copied to %s:%s", len(refcats), REPO_LOCAL, STD_REFCAT)
