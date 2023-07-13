@@ -59,8 +59,8 @@ DATASET_REPO = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "preloaded"))
 
 def _make_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-b", dest="src_dir", default="/repo/main",
-                        help="Repo to import from, defaults to '/repo/main'.")
+    parser.add_argument("-b", dest="src_dir", default="/sdf/group/rubin/repo/main",
+                        help="Repo to import from, defaults to '/sdf/group/rubin/repo/main'.")
     parser.add_argument("-t", dest="src_collection", required=True,
                         help="Template collection to import from.")
     parser.add_argument("--where",
@@ -97,7 +97,7 @@ def _export(butler, export_file, template_query):
         The names of the runs containing exported templates.
     """
     skymaps = butler.registry.queryDataIds("skymap", datasets=TEMPLATE_NAME, collections=butler.collections)
-    skymap_query = f"skymap IN ({', '.join(repr(id['skymap']) for id in skymaps)})"
+    skymap_query = " or ".join(f"skymap = '{id['skymap']}'" for id in skymaps)
     with butler.export(filename=export_file, transfer=None) as contents:
         # Export skymap(s)
         contents.saveDatasets(
