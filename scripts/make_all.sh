@@ -41,6 +41,7 @@ DATASET_REPO="${SCRIPT_DIR}/../preloaded/"
 
 INSTRUMENT=LSSTCam
 UMBRELLA_COLLECTION="${INSTRUMENT}/defaults"  # Hardcoded into ap_verify, do not change!
+RB_MODEL="rbResnet50-DC2"
 
 ########################################
 # Command-line options
@@ -113,6 +114,12 @@ python "${SCRIPT_DIR}/ingest_refcats.py" -b ${SCRATCH_REPO} -i "${REFCAT_COLLECT
 
 
 ########################################
+# Import pretrained NN models
+
+python "${SCRIPT_DIR}/get_nn_models.py" -m "${RB_MODEL}"
+
+
+########################################
 # Download solar system ephemerides
 
 python "${SCRIPT_DIR}/generate_ephemerides.py"
@@ -122,7 +129,8 @@ python "${SCRIPT_DIR}/generate_ephemerides.py"
 # Final clean-up
 
 # The individual collections are set in the appropriate sub-scripts.
-butler collection-chain "${DATASET_REPO}" "${UMBRELLA_COLLECTION}" templates/goodSeeing skymaps ${INSTRUMENT}/calib refcats sso
+butler collection-chain "${DATASET_REPO}" "${UMBRELLA_COLLECTION}" \
+    templates/goodSeeing skymaps ${INSTRUMENT}/calib refcats sso models
 
 python "${SCRIPT_DIR}/make_preloaded_export.py"
 

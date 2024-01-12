@@ -33,6 +33,7 @@ collection              | description
 `refcats`               | Level 7 HTM shards from relevant reference catalogs.
 `skymaps`               | Skymaps for the template coadds.
 `templates/<type>`      | Coadd images produced by a compatible version of the LSST pipelines. For example, `deepCoadd` images go in a `templates/deep` collection.
+`models`                | Pretrained machine learning models.
 `<instrument>/defaults` | A chained collection linking all of the above.
 
 Git LFS
