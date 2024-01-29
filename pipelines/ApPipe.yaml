@@ -8,4 +8,4 @@ description: Stub Alert Production pipeline
 # -c diaPipe:apdb.connection_timeout: 240
 
 imports:
-  - location: $AP_PIPE_DIR/pipelines/LsstCamImSim/ApPipe.yaml
+  - location: $AP_PIPE_DIR/pipelines/LSSTCam-imSim/ApPipe.yaml
