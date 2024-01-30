@@ -5,4 +5,4 @@ description: Stub instrumented Alert Production pipeline
 # overrides, and importing both pipelines can't merge changes to the same task.
 
 imports:
-  - location: $AP_VERIFY_DIR/pipelines/LsstCamImSim/ApVerify.yaml
+  - location: $AP_VERIFY_DIR/pipelines/LSSTCam-imSim/ApVerify.yaml

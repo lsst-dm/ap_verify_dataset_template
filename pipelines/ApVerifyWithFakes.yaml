@@ -6,4 +6,4 @@ description: Stub instrumented Alert Production pipeline
 # the same task.
 
 imports:
-  - location: $AP_VERIFY_DIR/pipelines/LsstCamImSim/ApVerifyWithFakes.yaml
+  - location: $AP_VERIFY_DIR/pipelines/LSSTCam-imSim/ApVerifyWithFakes.yaml

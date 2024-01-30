@@ -2,4 +2,4 @@ description: Stub Alert Production template building pipeline
 # This pipeline assumes the working repo has raws, calibs, refcats, and a skymap.
 
 imports:
-  - location: $AP_PIPE_DIR/pipelines/LsstCamImSim/ApTemplate.yaml
+  - location: $AP_PIPE_DIR/pipelines/LSSTCam-imSim/ApTemplate.yaml
