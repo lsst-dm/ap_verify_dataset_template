@@ -31,9 +31,7 @@ import logging
 import os
 import sys
 
-import lsst.log
-import lsst.sphgeom
-from lsst.daf.butler import Butler, CollectionType, FileDataset
+from lsst.daf.butler import Butler, CollectionType
 
 
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)

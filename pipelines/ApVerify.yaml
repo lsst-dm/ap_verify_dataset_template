@@ -6,3 +6,10 @@ description: Stub instrumented Alert Production pipeline
 
 imports:
   - location: $AP_VERIFY_DIR/pipelines/LSSTCam-imSim/ApVerify.yaml
+tasks:
+  # Use the model that's actually in this dataset, regardless of defaults.
+  rbClassify:
+    class: lsst.meas.transiNet.RBTransiNetTask
+    config:
+      # Use dataset's model
+      file: $AP_VERIFY_DATASET_TEMPLATE_DIR/config/rbClassify.py
