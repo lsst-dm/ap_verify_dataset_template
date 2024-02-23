@@ -9,7 +9,7 @@ imports:
   - location: $AP_VERIFY_DIR/pipelines/LSSTCam-imSim/ApVerifyWithFakes.yaml
 tasks:
   # Use the model that's actually in this dataset, regardless of defaults.
-  rbClassifyWithFakes:
+  rbClassify:
     class: lsst.meas.transiNet.RBTransiNetTask
     config:
       # Use dataset's model
