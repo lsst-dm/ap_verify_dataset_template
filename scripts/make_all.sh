@@ -42,6 +42,7 @@ DATASET_REPO="${SCRIPT_DIR}/../preloaded/"
 INSTRUMENT=LSSTCam
 UMBRELLA_COLLECTION="${INSTRUMENT}/defaults"  # Hardcoded into ap_verify, do not change!
 RB_MODEL="rbResnet50-DC2"
+INJECTION_CATALOG_COLLECTION="fake-injection-catalog"
 
 ########################################
 # Command-line options
@@ -124,13 +125,18 @@ python "${SCRIPT_DIR}/get_nn_models.py" -m "${RB_MODEL}"
 
 python "${SCRIPT_DIR}/generate_ephemerides.py"
 
+########################################
+# Create fake source injecteion catalogs
+
+"${SCRIPT_DIR}/generate_fake_injection_catalog.sh" -b ${DATASET_REPO} -o ${INJECTION_CATALOG_COLLECTION}
 
 ########################################
 # Final clean-up
 
 # The individual collections are set in the appropriate sub-scripts.
 butler collection-chain "${DATASET_REPO}" "${UMBRELLA_COLLECTION}" \
-    templates/goodSeeing skymaps ${INSTRUMENT}/calib refcats sso models
+    templates/goodSeeing skymaps ${INSTRUMENT}/calib refcats sso models \
+    ${INJECTION_CATALOG_COLLECTION}
 
 python "${SCRIPT_DIR}/make_preloaded_export.py"
 
