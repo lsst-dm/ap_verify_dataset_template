@@ -22,7 +22,7 @@
 
 """Script for copying templates appropriate for these fields.
 
-The datasets can be from any source, including the generate_templates_gen3.sh
+The datasets can be from any source, including the generate_templates.sh
 script in this directory.
 
 Example:
