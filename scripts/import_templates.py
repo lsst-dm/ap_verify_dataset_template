@@ -47,7 +47,7 @@ logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 lsst.log.configure_pylog_MDC("DEBUG", MDC_class=None)
 
 
-# Template type **must** match that used in the dataset's pipelines, including ApTemplate.yaml if it exists.
+# Template type **must** match that used in the dataset's pipelines.
 TEMPLATE_TYPE = "goodSeeing"
 # Avoid explicit references to dataset package to maximize portability.
 SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
