@@ -123,6 +123,7 @@ python "${SCRIPT_DIR}/get_nn_models.py" -m "${RB_MODEL}"
 ########################################
 # Download solar system ephemerides
 
+python "${SCRIPT_DIR}/generate_group_dimensions.py"
 python "${SCRIPT_DIR}/generate_ephemerides.py"
 
 ########################################
