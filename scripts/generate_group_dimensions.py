@@ -23,7 +23,9 @@
 """Script for (re)generating group dimensions for this data set.
 
 Running this script allows for updates of the existing dimensions if the
-repository is being rebuilt or new raws are being added.
+repository is being rebuilt or new raws are being added. It is not needed
+if another script already runs ingest and copies the dimensions over (as
+does ``get_ephemerides.py``).
 
 Example:
 $ python generate_group_dimensions.py
