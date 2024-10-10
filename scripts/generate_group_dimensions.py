@@ -25,7 +25,7 @@
 Running this script allows for updates of the existing dimensions if the
 repository is being rebuilt or new raws are being added. It is not needed
 if another script already runs ingest and copies the dimensions over (as
-does ``get_ephemerides.py``).
+do both ``get_ephemerides.py`` and ``generate_self_preload.py``).
 
 Example:
 $ python generate_group_dimensions.py

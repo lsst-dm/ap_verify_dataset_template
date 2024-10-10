@@ -14,6 +14,7 @@ path                         | description
 :----------------------------|:-----------------------------
 make_all.sh                  | Rebuild everything from scratch.
 generate_group_dimensions.py | Predefine the group dimensions corresponding to the input raws. This allows support for preprocessing datasets.
+generate_self_preload.py     | Create preloaded APDB datasets by simulating a processing run with no pre-existing DIAObjects.
 generate_templates.sh        | Create templates in an external repo (such as `repo/main`) that cover this dataset's area.
 make_empty_repo.sh           | Replace `preloaded/` with a repo containing only dimension definitions and standard "curated" calibs.
 import_templates.py          | Transfer templates from an external repo (such as `repo/main`) and register them in `preloaded/`.
