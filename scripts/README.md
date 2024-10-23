@@ -10,14 +10,16 @@ See each script's docstring for usage instructions; those scripts that take argu
 
 Contents
 --------
-path                     | description
-:------------------------|:-----------------------------
-make_all.sh              | Rebuild everything from scratch.
-generate_templates.sh    | Create templates in an external repo (such as `repo/main`) that cover this dataset's area.
-make_empty_repo.sh       | Replace `preloaded/` with a repo containing only dimension definitions and standard "curated" calibs.
-import_templates.py      | Transfer templates from an external repo (such as `repo/main`) and register them in `preloaded/`.
-import_calibs.py         | Transfer calibs from an external repo (such as `repo/main`) and register them in `preloaded/`. Calibs are assumed to be generated as part of the regular reprocessing of the source repo, and there's no script for making them from scratch.
-ingest_refcats.py        | Transfer refcats from an external repo (such as `repo/main`) and register them in `preloaded/`.
-get_ephemerides.py       | Download solar system ephemerides and register them in `preloaded/`.
-get_nn_models.py         | Transfer a selected pretrained model from an external repo (such as `repo/main`) and register it in `preloaded/`.
-make_preloaded_export.py | Create an export file of `preloaded/` that's compatible with `butler import`.
+path                         | description
+:----------------------------|:-----------------------------
+make_all.sh                  | Rebuild everything from scratch.
+generate_group_dimensions.py | Predefine the group dimensions corresponding to the input raws. This allows support for preprocessing datasets.
+generate_self_preload.py     | Create preloaded APDB datasets by simulating a processing run with no pre-existing DIAObjects.
+generate_templates.sh        | Create templates in an external repo (such as `repo/main`) that cover this dataset's area.
+make_empty_repo.sh           | Replace `preloaded/` with a repo containing only dimension definitions and standard "curated" calibs.
+import_templates.py          | Transfer templates from an external repo (such as `repo/main`) and register them in `preloaded/`.
+import_calibs.py             | Transfer calibs from an external repo (such as `repo/main`) and register them in `preloaded/`. Calibs are assumed to be generated as part of the regular reprocessing of the source repo, and there's no script for making them from scratch.
+ingest_refcats.py            | Transfer refcats from an external repo (such as `repo/main`) and register them in `preloaded/`.
+get_ephemerides.py           | Download solar system ephemerides and register them in `preloaded/`.
+get_nn_models.py             | Transfer a selected pretrained model from an external repo (such as `repo/main`) and register it in `preloaded/`.
+make_preloaded_export.py     | Create an export file of `preloaded/` that's compatible with `butler import`.

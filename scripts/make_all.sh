@@ -123,6 +123,7 @@ python "${SCRIPT_DIR}/get_nn_models.py" -m "${RB_MODEL}"
 ########################################
 # Download solar system ephemerides
 
+python "${SCRIPT_DIR}/generate_group_dimensions.py"
 python "${SCRIPT_DIR}/generate_ephemerides.py"
 
 ########################################
@@ -135,7 +136,7 @@ python "${SCRIPT_DIR}/generate_ephemerides.py"
 
 # The individual collections are set in the appropriate sub-scripts.
 butler collection-chain "${DATASET_REPO}" "${UMBRELLA_COLLECTION}" \
-    templates/goodSeeing skymaps ${INSTRUMENT}/calib refcats sso models \
+    templates/goodSeeing skymaps ${INSTRUMENT}/calib refcats sso dia_catalogs models \
     ${INJECTION_CATALOG_COLLECTION}
 
 python "${SCRIPT_DIR}/make_preloaded_export.py"
