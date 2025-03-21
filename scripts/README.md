@@ -5,6 +5,9 @@ This directory has example scripts for (re)creating an ap_verify dataset.
 Adopting such scripts for your own datasets is highly recommended, to make it easy to update the pipeline inputs (in particular, calibs and templates) for pipeline improvements.
 These scripts are *not* intended to be used as-is; they may require some fine-tuning to adapt to the specifics of your data set.
 
+*Any* change to the repo requires running `make_preloaded_export.py` to ensure the export file is up-to-date.
+The data set will not run correctly without this step, but it also makes it easy to see and review each commit's changes.
+
 The scripts are designed to be modular, and can be called either all at once (through `make_all.sh`), or individually.
 See each script's docstring for usage instructions; those scripts that take arguments also support `--help`.
 
