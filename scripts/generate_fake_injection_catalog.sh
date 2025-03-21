@@ -21,7 +21,8 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # Script for automatically generating fake source injection catalogs.
-# This automatically ingests the catalogs into the preloaded butler.
+# This script requires the source_injection repository to be set up, and for
+# templates to already exist in this data set.
 #
 # Example:
 # "${SCRIPT_DIR}/generate_fake_injection_catalog.sh" -b ${DATASET_REPO} -o ${INJECTION_CATALOG_COLLECTION}
