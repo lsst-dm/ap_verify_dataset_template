@@ -21,13 +21,25 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # Script for automatically generating fake source injection catalogs.
-# This automatically ingests the catalogs into the preloaded butler.
+# This script requires the source_injection repository to be set up, and for
+# templates to already exist in this data set.
 #
 # Example:
 # "${SCRIPT_DIR}/generate_fake_injection_catalog.sh" -b ${DATASET_REPO} -o ${INJECTION_CATALOG_COLLECTION}
 
 # Abort script on any error
 set -e
+
+
+########################################
+# Per data set configuration
+
+TEMPLATE_TYPE=goodSeeing  # Must match the type used in this data set
+BANDS="g"                 # Band(s) for which to generate fakes
+RA_RANGE="152.0 156.0"    # Catalog box in degrees
+DEC_RANGE="-6.02 -5.6"
+MAG_RANGE="18 26"
+DENSITY=5000              # Source density in deg^-2
 
 
 ########################################
@@ -42,7 +54,7 @@ print_error() {
 
 usage() {
     print_error
-    print_error "Usage: $0 [-b BUTLER_REPO] -c ROOT_COLLECTION [-h]"
+    print_error "Usage: $0 [-b BUTLER_REPO] -o OUTPUT_COLLECTION [-h]"
     print_error
     print_error "Specific options:"
     print_error "   -b          Butler repo yaml file URI, defaults to preloaded repo"
@@ -71,20 +83,22 @@ parse_args() {
 }
 parse_args $@
 
+TEMPLATE_NAME=${TEMPLATE_TYPE}Coadd
+TEMPLATE_COLLECT=templates/${TEMPLATE_TYPE}
 
 # The -a (RA) and -d (Dec) options are the limits of the sky polygon
 #  where to draw random fake positions, -s is source density per sq degree,
-#  -m is the magnitude interval, -i is the filter set to use, and --seed fixes the random see to use. 
+#  -m is the magnitude interval, -i is the filter set to use, and --seed fixes the random see to use.
 generate_injection_catalog \
-    -a 152.0 156.0 \
-    -d -6.02 -5.6 \
+    # Expansions of *_RANGE and BANDS are unquoted so that they expand into multiple words
+    -a $RA_RANGE \
+    -d $DEC_RANGE \
     -p source_type Star \
-    -s 5000 \
-    -b ${BUTLER_REPO} \
-    -w goodSeeingCoadd \
-    -c 'templates/goodSeeing' \
-    -o ${OUTPUT_COLLECTION} \
-    -m 18 26 \
-    -i g \
-    --seed 314 
-
+    -s ${DENSITY} \
+    -b "${BUTLER_REPO}" \
+    -w "$TEMPLATE_NAME" \
+    -c "$TEMPLATE_COLLECT" \
+    -o "${OUTPUT_COLLECTION}" \
+    -m $MAG_RANGE \
+    -i $BANDS \
+    --seed 314
