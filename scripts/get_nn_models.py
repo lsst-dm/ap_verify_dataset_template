@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# This file is part of ap_verify_dataset_template.
+# This file is part of ap_verify_dp1_47Tuc.
 #
 # Developed for the LSST Data Management System.
 # This product includes software developed by the LSST Project
@@ -96,9 +96,8 @@ _clean_dataset(dest)
 # Transfer
 
 MODEL_COLLECT = f"{MODEL_PREFIX}/{args.model_name}"
-
 src = Butler(args.src_dir, writeable=False)
-dest.transfer_from(src, src.registry.queryDatasets(..., collections=MODEL_COLLECT),
+dest.transfer_from(src, src.registry.queryDatasets('pretrainedModel*', collections=MODEL_COLLECT),
                    transfer="copy", register_dataset_types=True)
 
 dest.registry.registerCollection(MODEL_CHAIN, CollectionType.CHAINED)

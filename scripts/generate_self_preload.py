@@ -135,6 +135,23 @@ def _ingest_raws(repo, raw_dir, run):
     definer = lsst.obs.base.DefineVisitsTask(butler=repo, config=lsst.obs.base.DefineVisitsConfig())
     definer.run(exposures)
 
+def _set_default_collections(repo, collections, defaults_name):
+    """Set the default collections for a repository.
+
+    Parameters
+    ----------
+    repo : `lsst.daf.butler.Butler`
+        A writeable Butler for the repository to modify.
+    collections : iterable [`str`]
+        The collections to set as the defaults.
+    defaults_name : `str`
+        The name of the defaults collection to create.
+    """
+    try:
+        repo.collections.extend_chain(defaults_name, list(collections))
+    except MissingCollectionError:
+        repo.collections.register(defaults_name, CollectionType.CHAINED)
+        repo.collections.extend_chain(defaults_name, list(collections))
 
 def _check_pipeline(butler):
     """Confirm that the pipeline is correctly configured.
@@ -178,7 +195,6 @@ def _build_catalogs(repo_dir, input_collections, output_collection):
     apdb_location = f"sqlite:///{repo_dir}/apdb.db"
     logging.debug("Creating apdb at %s...", apdb_location)
     apdb_config = lsst.dax.apdb.ApdbSql.init_database(db_url=apdb_location)
-
     with tempfile.NamedTemporaryFile(suffix=".py") as config_file:
         apdb_config.save(config_file.name)
 
@@ -243,7 +259,10 @@ with tempfile.TemporaryDirectory() as workspace:
     logging.info("Simulating DIA analysis...")
     inst_name = temp_repo.query_data_ids("instrument")[0]["instrument"]
     instrument = lsst.obs.base.Instrument.fromName(inst_name, temp_repo.registry)
-    _build_catalogs(workspace, [RAW_RUN, instrument.makeUmbrellaCollectionName()], DEST_RUN)
+    defaults_name = instrument.makeUmbrellaCollectionName()
+    defaults_collections = [f"{inst_name}/calib", "skymaps", "refcats", "models", "sso", "templates", RAW_RUN]
+    _set_default_collections(temp_repo, defaults_collections, defaults_name)
+    _build_catalogs(workspace, [RAW_RUN, defaults_name], DEST_RUN)
     temp_repo.registry.refresh()    # Pipeline added dataset types
     logging.debug("Preloaded repo has universe version %d.", preloaded.dimensions.version)
     logging.info("Transferring catalogs to data set...")

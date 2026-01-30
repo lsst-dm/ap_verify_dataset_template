@@ -93,13 +93,6 @@ REFCAT_COLLECTION=refcats
 
 
 ########################################
-# Prepare templates
-
-"${SCRIPT_DIR}/generate_templates.sh" -b ${SCRATCH_REPO} -c "${CALIB_COLLECTION}" \
-    -o "${TEMPLATE_COLLECTION}"
-
-
-########################################
 # Repository creation and instrument registration
 
 "${SCRIPT_DIR}/make_empty_repo.sh"
@@ -123,7 +116,9 @@ python "${SCRIPT_DIR}/get_nn_models.py" -m "${RB_MODEL}"
 ########################################
 # Download solar system ephemerides
 
-python "${SCRIPT_DIR}/generate_group_dimensions.py"
+# The group_dimensions.py script is optional
+# python "${SCRIPT_DIR}/generate_group_dimensions.py"
+
 python "${SCRIPT_DIR}/generate_ephemerides.py"
 
 ########################################
@@ -131,12 +126,19 @@ python "${SCRIPT_DIR}/generate_ephemerides.py"
 
 "${SCRIPT_DIR}/generate_fake_injection_catalog.sh" -b ${DATASET_REPO} -o ${INJECTION_CATALOG_COLLECTION}
 
+
+########################################
+# Preloaded APDB catalogs
+
+python "${SCRIPT_DIR}/generate_self_preload.py"
+
+
 ########################################
 # Final clean-up
 
 # The individual collections are set in the appropriate sub-scripts.
 butler collection-chain "${DATASET_REPO}" "${UMBRELLA_COLLECTION}" \
-    templates/goodSeeing skymaps ${INSTRUMENT}/calib refcats sso dia_catalogs models \
+    templates skymaps ${INSTRUMENT}/calib refcats sso dia_catalogs models \
     ${INJECTION_CATALOG_COLLECTION}
 
 python "${SCRIPT_DIR}/make_preloaded_export.py"

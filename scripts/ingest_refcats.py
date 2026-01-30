@@ -43,11 +43,10 @@ logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 DATA_IDS = [dict(detector=164, visit=982985, instrument="LSSTCam"),
             dict(detector=168, visit=943296, instrument="LSSTCam"),
             ]
-REFCAT_NAMES = {"gaia_dr2_20200414", "ps1_pv3_3pi_20170110"}
+REFCAT_NAMES = {"the_monster_20250219"}
 
 SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
 REPO_LOCAL = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "preloaded"))
-
 
 ########################################
 # Command-line options
