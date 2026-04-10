@@ -38,6 +38,7 @@ import sys
 import tempfile
 
 import pandas
+from lsst.afw.table import SourceCatalog
 
 import lsst.log
 import lsst.sphgeom
@@ -52,10 +53,11 @@ lsst.log.configure_pylog_MDC("DEBUG", MDC_class=None)
 # Avoid explicit references to dataset package to maximize portability.
 SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
 PIPE_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "pipelines"))
+EPHEM_FILE = os.path.normpath(os.path.join(SCRIPT_DIR, "preloaded_ssObjects_groupDetectors.pkl"))
 RAW_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "raw"))
 RAW_RUN = "raw"
 VISIT_DATASET = "visit_dummy"
-EPHEM_DATASET = "preloaded_SsObjects"
+EPHEM_DATASET = "preloaded_ss_object"
 DEST_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "preloaded"))
 DEST_COLLECTION = "sso"
 DEST_RUN = DEST_COLLECTION + "/mpsky"
@@ -141,47 +143,47 @@ def _make_visit_datasets(repo, run):
     run : `str`
         The name of the run into which to create datasets.
     """
-    dummy_type = DatasetType(VISIT_DATASET, {"instrument", "visit", "detector"}, "DataFrame")
+    universe = repo.dimensions
+    dummy_type = DatasetType(VISIT_DATASET, {"instrument", "visit", "detector"}, "SourceCatalog", universe=universe)
     repo.registry.registerDatasetType(dummy_type)
     # Exclude unused detectors
     data_ids = {ref.dataId for ref in repo.query_datasets("raw", collections="*", find_first=False)}
-    exp_table = pandas.DataFrame()
+    exp_table = SourceCatalog()
     for id in data_ids:
-        repo.put(exp_table, dummy_type, id, run=run)
+        dataId = dict(id.to_simple())['dataId']  # Copy to include visit
+        dataId['visit'] = dataId['exposure']
+        repo.put(exp_table, dummy_type, dataId, run=run)
 
+########################
+# Load the ephemerides from the pickle file
 
-########################################
-# Download ephemerides
-
-def _get_ephem(repo_dir, raw_collection, ephem_collection):
-    """Run the tasks for downloading ephemerides.
+def _load_ephem(ephem_file, ephem_type, run, dest_repo):
+    """Copy ephemerides between two repositories.
 
     Parameters
     ----------
-    repo_dir : `str`
-        The repository on which to run the task.
-    raw_collection : `str`
-        The collection containing input raws.
-    ephem_collection : `str`
-        The collection into which to generate ephemerides.
-
-    Raises
-    ------
-    RuntimeError
-        Raised on any pipeline failure.
+    ephem_file : `str`
+        The dataset file of the ephemerides.
+    ephem_type : `str`
+        The dataset type of the ephemerides.
+    run : `str`
+        The name of the run containing the ephemerides ``dest_repo``.
+    dest_repo : `lsst.daf.butler.Butler`
+        The repository to which to copy the datasets.
     """
-    pipeline_file = os.path.join(PIPE_DIR, "Ephemerides.yaml")
-    pipeline_args = ["pipetask", "run",
-                     "--butler-config", repo_dir,
-                     "--pipeline", pipeline_file,
-                     "--input", raw_collection,
-                     "--output-run", ephem_collection,
-                     "--processes", "12",
-                     "--register-dataset-types",
-                     ]
-    results = subprocess.run(pipeline_args, capture_output=False, shell=False, check=False)
-    if results.returncode:
-        raise RuntimeError("Pipeline failed to run; see log for details.")
+    logging.info("Loading ephemerides from %s into %s:%s", ephem_file, DEST_DIR, run)
+    # We assume the file already exists; we are just loading it into the repo
+    ssObjects_Type = DatasetType(
+        ephem_type, {"detector", "group"}, "ArrowAstropy", universe=dest_repo.dimensions)
+    dest_repo.registry.registerDatasetType(ssObjects_Type)
+    dest_repo.collections.register(run, CollectionType.RUN)
+    with open(ephem_file, "rb") as f:
+        ephem_cats = pandas.read_pickle(f)
+        for (group, detector), ephem_cat in ephem_cats.items():
+            dataId = dict(group=group, detector=detector, instrument="LSSTCam")
+            logging.debug("Putting ephemerides for group=%d, detector=%d", group, detector)
+            dest_repo.put(ephem_cat, ephem_type, dataId=dataId, run=run)
+    logging.debug("Read %d ephemerides from %s", len(ephem_cats), ephem_file)
 
 
 ########################################
@@ -224,7 +226,7 @@ with tempfile.TemporaryDirectory() as workspace:
     _ingest_raws(temp_repo, RAW_DIR, RAW_RUN)
     _make_visit_datasets(temp_repo, RAW_RUN)
     logging.info("Downloading ephemerides...")
-    _get_ephem(workspace, RAW_RUN, DEST_RUN)
+    _load_ephem(EPHEM_FILE, EPHEM_DATASET, DEST_RUN, temp_repo)
     temp_repo.registry.refresh()    # Pipeline added dataset types
     preloaded = Butler(DEST_DIR, writeable=True)
     logging.debug("Preloaded repo has universe version %d.", preloaded.dimensions.version)

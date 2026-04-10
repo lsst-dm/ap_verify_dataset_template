@@ -51,7 +51,11 @@ lsst.log.configure_pylog_MDC("DEBUG", MDC_class=None)
 DATA_IDS = [dict(detector=164, visit=982985, instrument="LSSTCam"),
             dict(detector=168, visit=943296, instrument="LSSTCam"),
             ]
-CALIB_NAMES = ["bias", "dark", "flat"]
+CALIB_NAMES = [
+    "bias", "dark", "flat",
+    "cti", "defects", "ptc", "linearizer",
+    "illuminationCorrection", "crosstalk",
+]
 
 # Avoid explicit references to dataset package to maximize portability.
 SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -96,11 +100,11 @@ def _export(butler, export_file):
     with butler.export(filename=export_file, transfer=None) as contents:
         for data_id in DATA_IDS:
             calibs = butler.registry.queryDatasets(CALIB_NAMES, dataId=data_id,
-                                                   collections=butler.collections)
-            contents.saveDatasets(calibs)
+                                                   collections=butler.collections.defaults)
+            contents.saveDatasets(calibs.expanded())
 
         calib_collections = set()
-        for collection in butler.collections:
+        for collection in butler.collections.defaults:
             calib_collections.update(_save_validities(butler.registry, contents, collection))
         return calib_collections
 
